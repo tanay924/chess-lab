@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
-import { Activity, FileText } from "@lucide/vue";
 
 import { previewPgn } from "../lib/pgn";
 import { useGamesStore } from "../stores/games";
@@ -42,10 +41,7 @@ async function importGame() {
         Chess Lab is a local training workspace built around async engine analysis, clear review reports,
         and replayable mistake practice.
       </p>
-      <div class="feature-row">
-        <span><FileText :size="17" /> PGN import</span>
-        <span><Activity :size="17" /> Worker analysis</span>
-      </div>
+      <p class="intro-note">PGN import. Local Stockfish queue. Review board.</p>
     </div>
 
     <form class="import-panel" @submit.prevent="importGame">
