@@ -1,0 +1,22 @@
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Java
+target/
+.gradle/
+build/
+
+# Local runtime
+.env
+.env.local
+data/
+logs/
+

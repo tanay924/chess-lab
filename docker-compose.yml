@@ -1,0 +1,33 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+
+  api-service:
+    build:
+      context: ./api-service
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+    ports:
+      - "8080:8080"
+    depends_on:
+      - rabbitmq
+
+  analysis-worker:
+    build:
+      context: ./analysis-worker
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      STOCKFISH_PATH: stockfish
+    depends_on:
+      - rabbitmq
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5174:80"
+    depends_on:
+      - api-service
