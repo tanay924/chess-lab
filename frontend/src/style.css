@@ -312,6 +312,26 @@ textarea:focus {
   padding: 18px;
 }
 
+.replay-controls {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto 1fr auto;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.replay-controls div {
+  min-width: 0;
+  text-align: center;
+}
+
+.replay-controls strong,
+.replay-controls span {
+  display: block;
+}
+
 .chess-board {
   aspect-ratio: 1;
   border: 10px solid #26362f;
