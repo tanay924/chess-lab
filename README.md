@@ -7,10 +7,11 @@ Chess Lab imports chess games, keeps a local study library, and runs Stockfish a
 ## Stack
 
 - Frontend: Vue 3, Vite, TypeScript, Vue Router, Pinia, chess.js
-- API: Spring Boot 4.1, Java 21
-- Worker: Spring Boot 4.1, Java 21, Stockfish boundary for the future queued architecture
-- Optional queue boundary: RabbitMQ
+- API: Spring Boot 4.1, Java 21, RabbitMQ producer/result consumer
+- Worker: Spring Boot 4.1, Java 21, RabbitMQ consumer, Stockfish runner
+- Queue: RabbitMQ
 - Optional local runtime: Docker Compose
+- Optional local orchestration: Kubernetes with Docker Desktop or kind
 
 ## Layout
 
@@ -29,8 +30,9 @@ Install these for the normal local runtime:
 - Java 21
 - Maven or the Maven Wrapper generated inside each Spring Boot service
 - Stockfish 18 or another UCI-compatible Stockfish binary
+- RabbitMQ for queued analysis
 
-Docker Desktop is only needed if you want to run the future worker/queue topology with Compose. The direct local API analysis flow does not require Docker.
+Docker Desktop is only needed if you want to run the app with Compose or local Kubernetes.
 
 ## Run Locally
 
@@ -46,6 +48,15 @@ API service:
 
 ```powershell
 cd api-service
+$env:SPRING_RABBITMQ_HOST='127.0.0.1'
+.\mvnw.cmd spring-boot:run
+```
+
+Worker service:
+
+```powershell
+cd analysis-worker
+$env:SPRING_RABBITMQ_HOST='127.0.0.1'
 $env:STOCKFISH_PATH='C:\path\to\stockfish.exe'
 .\mvnw.cmd spring-boot:run
 ```
@@ -57,7 +68,7 @@ $env:STOCKFISH_DEPTH='8'
 $env:ANALYSIS_MAX_PLIES='80'
 ```
 
-Analysis is processed inside the API service for the current local-first slice. The separate `analysis-worker` module remains in the repo for the later RabbitMQ-backed architecture.
+Analysis jobs are queued through RabbitMQ. The API creates jobs and serves reports; the worker consumes jobs, runs Stockfish, and publishes completed reports back to the API.
 
 Docker Compose, once Docker is installed:
 
@@ -65,19 +76,38 @@ Docker Compose, once Docker is installed:
 docker compose up --build
 ```
 
+Compose exposes:
+
+- Frontend: `http://127.0.0.1:5175`
+- API: `http://127.0.0.1:8080`
+- RabbitMQ management: `http://127.0.0.1:15673` (`guest` / `guest`)
+
+Local Kubernetes:
+
+```powershell
+docker build -t chess-lab-api:local .\api-service
+docker build -t chess-lab-worker:local .\analysis-worker
+docker build -t chess-lab-frontend:local .\frontend
+kubectl apply -f .\k8s\local\namespace.yaml
+kubectl apply -f .\k8s\local
+kubectl -n chess-lab get pods
+```
+
+See `k8s/local/README.md` for port-forwarding, kind image loading, logs, and cleanup.
+
 The frontend defaults to `http://127.0.0.1:8080` for API calls. Set `VITE_API_BASE_URL` before building if you run the API elsewhere.
 
 ## Current Slice
 
 - PGN import and manual starting-position entry are parsed client-side with `chess.js`, including legal final FEN and move table extraction.
 - The API stores imported games in memory and exposes list/detail/analysis endpoints.
-- Analysis jobs run asynchronously in the API service and call local Stockfish for each ply.
+- Analysis jobs run asynchronously through RabbitMQ; the worker calls local Stockfish for each ply.
 - The frontend polls analysis reports and renders the engine's best move plus a first-pass classification.
-- The worker contains deterministic move classification rules and a UCI Stockfish process client for the future queued service; it does not fabricate engine analysis.
+- The worker contains deterministic move classification rules and a UCI Stockfish process client; it does not fabricate engine analysis.
 
 ## Next Engineering Steps
 
 1. Replace the first-pass best-move-only classification with centipawn-loss based grading.
 2. Persist games, jobs, and reports so imported games survive API restarts.
 3. Add mistake replay drills from completed engine reports.
-4. Optionally move analysis execution behind RabbitMQ and the worker service once durable jobs matter.
+4. Add optional observability dashboards around API latency, queue depth, and worker analysis time.

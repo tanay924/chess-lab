@@ -13,6 +13,7 @@ public class StockfishAnalysisService {
 
 	public MoveEvaluation evaluateMove(int ply, String playedMove, String bestMove, int playedScoreCp, int bestScoreCp) {
 		int centipawnLoss = Math.abs(bestScoreCp - playedScoreCp);
-		return new MoveEvaluation(ply, playedMove, bestMove, playedScoreCp, classifier.classify(centipawnLoss));
+		return new MoveEvaluation(ply, playedMove, bestMove, playedScoreCp,
+				classifier.classify(centipawnLoss).name().toLowerCase());
 	}
 }

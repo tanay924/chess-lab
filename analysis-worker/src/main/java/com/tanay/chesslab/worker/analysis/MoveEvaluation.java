@@ -5,5 +5,5 @@ public record MoveEvaluation(
 		String playedMove,
 		String bestMove,
 		int scoreCp,
-		MoveClassification classification) {
+		String classification) {
 }

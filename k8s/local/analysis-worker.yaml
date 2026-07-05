@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analysis-worker
+  namespace: chess-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analysis-worker
+  template:
+    metadata:
+      labels:
+        app: analysis-worker
+    spec:
+      containers:
+        - name: analysis-worker
+          image: chess-lab-worker:local
+          imagePullPolicy: Never
+          env:
+            - name: SPRING_RABBITMQ_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: chess-lab-config
+                  key: SPRING_RABBITMQ_HOST
+            - name: STOCKFISH_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: chess-lab-config
+                  key: STOCKFISH_PATH
+          ports:
+            - name: http
+              containerPort: 8081
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            initialDelaySeconds: 40
+            periodSeconds: 20

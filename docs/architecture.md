@@ -8,15 +8,16 @@ flowchart LR
   API --> Queue["RabbitMQ"]
   Queue --> Worker["Analysis Worker"]
   Worker --> Stockfish["Stockfish"]
+  Worker --> Queue
+  Queue --> API
   API -. "planned persistence" .-> DB["PostgreSQL"]
-  Worker -. "planned report writes" .-> DB
 ```
 
 ## Services
 
 - `frontend`: user interface for PGN import, game review, analysis progress, and mistake drills.
-- `api-service`: owns the HTTP API, in-memory game records for the first slice, analysis job lifecycle, and report reads.
-- `analysis-worker`: owns Stockfish process integration and move classification.
+- `api-service`: owns the HTTP API, in-memory game records for the first slice, analysis job lifecycle, request publishing, result consumption, and report reads.
+- `analysis-worker`: consumes queued analysis requests, owns Stockfish process integration, move classification, and completed report publishing.
 - `rabbitmq`: local queue boundary between API and worker.
 - `postgres`: planned durable storage once the engine loop is functional.
 
@@ -27,7 +28,7 @@ flowchart LR
 - No AI summaries.
 - No accounts.
 - No chess.com or Lichess import.
-- No k8s until the local Docker Compose runtime is clean.
+- Local Kubernetes is supported for orchestration practice; it still uses local images and local-only services.
 
 ## Analysis Flow
 
@@ -35,7 +36,8 @@ flowchart LR
 2. API stores the game and normalized moves.
 3. User starts analysis.
 4. API creates an analysis job.
-5. Next slice: API publishes work to RabbitMQ.
+5. API publishes work to RabbitMQ.
 6. Worker runs Stockfish on relevant positions.
-7. Worker returns move evaluations and mistake classifications.
+7. Worker publishes move evaluations and mistake classifications back to RabbitMQ.
 8. Frontend polls job/report endpoints and renders the report.
+9. API consumes worker results and updates the in-memory report served by the polling endpoint.

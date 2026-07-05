@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chess-lab-config
+  namespace: chess-lab
+data:
+  SPRING_RABBITMQ_HOST: rabbitmq
+  STOCKFISH_DEPTH: "8"
+  ANALYSIS_MAX_PLIES: "80"
+  STOCKFISH_PATH: stockfish

@@ -15,6 +15,6 @@ class StockfishAnalysisServiceTest {
 		assertThat(evaluation.ply()).isEqualTo(12);
 		assertThat(evaluation.playedMove()).isEqualTo("Nf3");
 		assertThat(evaluation.bestMove()).isEqualTo("Bb5");
-		assertThat(evaluation.classification()).isEqualTo(MoveClassification.MISTAKE);
+		assertThat(evaluation.classification()).isEqualTo("mistake");
 	}
 }
