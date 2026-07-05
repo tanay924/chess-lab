@@ -63,6 +63,16 @@ button:disabled {
   opacity: 0.55;
 }
 
+.secondary-button {
+  background: #ffffff;
+  border-color: var(--line-strong);
+  color: var(--green-dark);
+}
+
+.secondary-button:hover {
+  background: var(--paper-soft);
+}
+
 .app-shell {
   min-height: 100vh;
 }
@@ -205,6 +215,37 @@ main {
   font-weight: 800;
 }
 
+.import-mode-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.mode-tabs {
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 18px;
+}
+
+.mode-tab {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: var(--muted);
+  min-height: 0;
+  padding: 0 0 9px;
+}
+
+.mode-tab:hover {
+  background: transparent;
+  color: var(--ink);
+}
+
+.mode-tab.active {
+  border-bottom-color: var(--green);
+  color: var(--ink);
+}
+
 textarea {
   background: #ffffff;
   border: 1px solid var(--line-strong);
@@ -285,21 +326,83 @@ textarea:focus {
 .board-square {
   align-items: center;
   background: #e6dfcf;
+  border: 0;
+  border-radius: 0;
   color: #20241f;
   display: flex;
   font-size: clamp(1.7rem, 5vw, 4rem);
   justify-content: center;
   min-height: 0;
   min-width: 0;
+  padding: 0;
+  position: relative;
 }
 
 .board-square span {
   font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "DejaVu Sans", serif;
   line-height: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .board-square.dark {
   background: #748868;
+}
+
+button.board-square {
+  cursor: pointer;
+}
+
+button.board-square:hover {
+  background: #ded6c5;
+}
+
+button.board-square.dark:hover {
+  background: #6e8063;
+}
+
+.board-square.selected {
+  box-shadow: inset 0 0 0 4px #b98a23;
+}
+
+.board-square.legal-target::after {
+  aspect-ratio: 1;
+  background: rgba(31, 65, 56, 0.34);
+  border-radius: 999px;
+  content: "";
+  position: absolute;
+  width: 20%;
+}
+
+.manual-entry {
+  gap: 16px;
+}
+
+.manual-board-shell .chess-board {
+  width: min(100%, 520px);
+}
+
+.manual-toolbar {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  padding-top: 12px;
+}
+
+.manual-toolbar strong,
+.manual-toolbar span {
+  display: block;
+}
+
+.manual-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.compact-move-list {
+  max-height: 190px;
 }
 
 .move-list {

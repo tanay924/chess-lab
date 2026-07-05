@@ -36,7 +36,7 @@ export function previewPgn(pgn: string): PgnPreview {
   };
 }
 
-function toMoveRecords(history: Move[]): MoveRecord[] {
+export function toMoveRecords(history: Move[]): MoveRecord[] {
   const records: MoveRecord[] = [];
 
   for (let index = 0; index < history.length; index += 2) {

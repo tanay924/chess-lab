@@ -69,7 +69,7 @@ The frontend defaults to `http://127.0.0.1:8080` for API calls. Set `VITE_API_BA
 
 ## Current Slice
 
-- PGN import is parsed client-side with `chess.js`, including legal final FEN and move table extraction.
+- PGN import and manual starting-position entry are parsed client-side with `chess.js`, including legal final FEN and move table extraction.
 - The API stores imported games in memory and exposes list/detail/analysis endpoints.
 - Analysis jobs run asynchronously in the API service and call local Stockfish for each ply.
 - The frontend polls analysis reports and renders the engine's best move plus a first-pass classification.

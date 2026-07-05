@@ -2,8 +2,19 @@
 import { computed } from "vue";
 import { Chess, type Square } from "chess.js";
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   fen: string;
+  interactive?: boolean;
+  legalTargets?: Square[];
+  selectedSquare?: Square | null;
+}>(), {
+  interactive: false,
+  legalTargets: () => [],
+  selectedSquare: null
+});
+
+const emit = defineEmits<{
+  squareClick: [square: Square];
 }>();
 
 const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
@@ -34,17 +45,35 @@ const board = computed(() => {
       return {
         dark,
         label: square,
-        piece: piece ? pieces[piece.color === "w" ? piece.type.toUpperCase() : piece.type] : ""
+        legalTarget: props.legalTargets.includes(square),
+        piece: piece ? pieces[piece.color === "w" ? piece.type.toUpperCase() : piece.type] : "",
+        selected: props.selectedSquare === square
       };
     })
   );
 });
+
+function selectSquare(square: Square) {
+  emit("squareClick", square);
+}
 </script>
 
 <template>
   <div class="chess-board" aria-label="Chess board">
-    <div
+    <button
+      v-if="interactive"
       v-for="square in board"
+      :key="square.label"
+      type="button"
+      class="board-square"
+      :class="{ dark: square.dark, selected: square.selected, 'legal-target': square.legalTarget }"
+      :aria-label="square.label"
+      @click="selectSquare(square.label)"
+    >
+      <span>{{ square.piece }}</span>
+    </button>
+    <div
+      v-for="square in interactive ? [] : board"
       :key="square.label"
       class="board-square"
       :class="{ dark: square.dark }"
