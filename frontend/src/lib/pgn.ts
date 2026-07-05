@@ -1,4 +1,4 @@
-import { Chess } from "chess.js";
+import { Chess, type Move } from "chess.js";
 
 import type { MoveRecord } from "../types";
 
@@ -21,7 +21,7 @@ export function previewPgn(pgn: string): PgnPreview {
   }
 
   const headers = chess.getHeaders();
-  const history = chess.history();
+  const history = chess.history({ verbose: true });
   if (history.length === 0) {
     throw new Error("Could not parse PGN. Check that the game text is complete and legal.");
   }
@@ -36,14 +36,20 @@ export function previewPgn(pgn: string): PgnPreview {
   };
 }
 
-function toMoveRecords(history: string[]): MoveRecord[] {
+function toMoveRecords(history: Move[]): MoveRecord[] {
   const records: MoveRecord[] = [];
 
   for (let index = 0; index < history.length; index += 2) {
+    const whiteMove = history[index];
+    const blackMove = history[index + 1];
     records.push({
-      blackMove: history[index + 1],
+      blackFenBefore: blackMove?.before,
+      blackMove: blackMove?.san,
+      blackUci: blackMove?.lan,
       fullMoveNumber: index / 2 + 1,
-      whiteMove: history[index]
+      whiteFenBefore: whiteMove.before,
+      whiteMove: whiteMove.san,
+      whiteUci: whiteMove.lan
     });
   }
 

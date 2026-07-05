@@ -302,6 +302,25 @@ textarea:focus {
   overflow: auto;
 }
 
+.evaluation-list {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 0;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.evaluation-list div {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 32px 1fr 92px 1fr;
+  padding: 7px 0;
+}
+
+.evaluation-list span {
+  color: var(--muted);
+}
+
 .move-list div {
   border-bottom: 1px solid var(--line);
   display: grid;

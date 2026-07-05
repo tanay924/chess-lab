@@ -24,12 +24,16 @@ export const useGamesStore = defineStore("games", {
       return this.run(async () => {
         const game = await api.createGame(payload);
         this.activeGame = game;
+        this.report = null;
         this.games = [game, ...this.games.filter((existing) => existing.id !== game.id)];
         return game;
       });
     },
     async fetchGame(gameId: string): Promise<GameDetail> {
       return this.run(async () => {
+        if (this.report?.gameId !== gameId) {
+          this.report = null;
+        }
         const game = await api.getGame(gameId);
         this.activeGame = game;
         return game;
@@ -48,7 +52,17 @@ export const useGamesStore = defineStore("games", {
       });
     },
     async startAnalysis(gameId: string): Promise<AnalysisJob> {
-      return this.run(() => api.startAnalysis(gameId));
+      return this.run(async () => {
+        const job = await api.startAnalysis(gameId);
+        this.report = {
+          evaluations: [],
+          gameId: job.gameId,
+          jobId: job.id,
+          message: "Stockfish analysis is running locally.",
+          status: job.status
+        };
+        return job;
+      });
     },
     async run<T>(action: () => Promise<T>): Promise<T> {
       this.loading = true;

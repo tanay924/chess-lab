@@ -26,9 +26,13 @@ export interface GameImportPayload {
 }
 
 export interface MoveRecord {
+  blackFenBefore?: string;
   blackMove?: string;
+  blackUci?: string;
   fullMoveNumber: number;
+  whiteFenBefore: string;
   whiteMove: string;
+  whiteUci: string;
 }
 
 export interface AnalysisJob {
