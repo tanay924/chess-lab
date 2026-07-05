@@ -22,9 +22,10 @@ docker build -t chess-lab-frontend:local .\frontend
 If you use `kind`, load the images into the cluster:
 
 ```powershell
-kind load docker-image chess-lab-api:local
-kind load docker-image chess-lab-worker:local
-kind load docker-image chess-lab-frontend:local
+kind create cluster --name chess-lab
+kind load docker-image chess-lab-api:local --name chess-lab
+kind load docker-image chess-lab-worker:local --name chess-lab
+kind load docker-image chess-lab-frontend:local --name chess-lab
 ```
 
 Docker Desktop Kubernetes can usually use the local Docker images directly.
@@ -55,6 +56,16 @@ http://127.0.0.1:5175
 ```
 
 The frontend build calls the API at `http://127.0.0.1:8080`, so keep the API port-forward running.
+
+If port `8080` is already in use, choose another local API port and rebuild the frontend with that API URL:
+
+```powershell
+docker build --build-arg VITE_API_BASE_URL=http://127.0.0.1:18080 -t chess-lab-frontend:local .\frontend
+kind load docker-image chess-lab-frontend:local --name chess-lab
+kubectl -n chess-lab rollout restart deployment/frontend
+kubectl -n chess-lab port-forward svc/api-service 18080:8080
+kubectl -n chess-lab port-forward svc/frontend 15175:80
+```
 
 Optional RabbitMQ management UI:
 
