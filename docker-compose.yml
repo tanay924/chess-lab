@@ -1,4 +1,20 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: chesslab
+      POSTGRES_USER: chesslab
+      POSTGRES_PASSWORD: chesslab
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chesslab -d chesslab"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
   rabbitmq:
     image: rabbitmq:3-management
     ports:
@@ -15,11 +31,17 @@ services:
       context: ./api-service
     environment:
       SPRING_RABBITMQ_HOST: rabbitmq
+      DATABASE_URL: jdbc:postgresql://postgres:5432/chesslab
+      DATABASE_USERNAME: chesslab
+      DATABASE_PASSWORD: chesslab
+      HIBERNATE_DDL_AUTO: update
       STOCKFISH_DEPTH: "8"
       ANALYSIS_MAX_PLIES: "80"
     ports:
       - "8080:8080"
     depends_on:
+      postgres:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
@@ -40,3 +62,6 @@ services:
       - "5175:80"
     depends_on:
       - api-service
+
+volumes:
+  postgres-data:

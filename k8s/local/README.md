@@ -4,6 +4,9 @@ This runs Chess Lab as local Kubernetes services:
 
 ```text
 Vue frontend -> Spring Boot API -> RabbitMQ -> analysis worker -> Stockfish
+                         |
+                         v
+                      Postgres
                                       ^-----------------------------|
 ```
 
@@ -39,6 +42,7 @@ kubectl -n chess-lab get pods
 ```
 
 Wait until `rabbitmq`, `api-service`, `analysis-worker`, and `frontend` are ready.
+Postgres should also be ready; it stores imported games, analysis jobs, and reports.
 
 ## Open The App
 

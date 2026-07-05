@@ -1,12 +1,8 @@
 package com.tanay.chesslab.api.service;
 
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +19,9 @@ import com.tanay.chesslab.api.domain.GameSummary;
 import com.tanay.chesslab.api.domain.MoveRecord;
 import com.tanay.chesslab.api.messaging.AnalysisJobDispatcher;
 import com.tanay.chesslab.api.messaging.AnalysisRequest;
+import com.tanay.chesslab.api.persistence.GameStore;
+import com.tanay.chesslab.api.persistence.InMemoryGameStore;
+import com.tanay.chesslab.api.persistence.NewGame;
 
 @Service
 public class GameService {
@@ -30,30 +29,30 @@ public class GameService {
 	private static final String STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	private static final String RUNNING_MESSAGE = "Stockfish analysis has been queued for the worker.";
 
-	private final AtomicLong gameSequence = new AtomicLong(1);
-	private final AtomicLong jobSequence = new AtomicLong(1);
 	private final AnalysisJobDispatcher dispatcher;
+	private final GameStore store;
 	private final int depth;
 	private final int maxPlies;
-	private final Map<String, GameDetail> games = new ConcurrentHashMap<>();
-	private final Map<String, AnalysisJob> jobsByGameId = new ConcurrentHashMap<>();
-	private final Map<String, AnalysisReport> reportsByGameId = new ConcurrentHashMap<>();
 
 	@Autowired
 	public GameService(
 			AnalysisJobDispatcher dispatcher,
+			GameStore store,
 			@Value("${analysis.stockfish.depth:8}") int depth,
 			@Value("${analysis.max-plies:80}") int maxPlies) {
 		this.dispatcher = dispatcher;
+		this.store = store;
 		this.depth = Math.max(1, depth);
 		this.maxPlies = Math.max(1, maxPlies);
 	}
 
+	public GameService(AnalysisJobDispatcher dispatcher, int depth, int maxPlies) {
+		this(dispatcher, new InMemoryGameStore(), depth, maxPlies);
+	}
+
 	public GameDetail createGame(CreateGameRequest request) {
-		String id = Long.toString(gameSequence.getAndIncrement());
 		List<MoveRecord> moves = sanitizeMoves(request.moves());
-		GameDetail detail = new GameDetail(
-				id,
+		return store.createGame(new NewGame(
 				valueOrDefault(request.white(), "White"),
 				valueOrDefault(request.black(), "Black"),
 				valueOrDefault(request.result(), "*"),
@@ -61,39 +60,30 @@ public class GameService {
 				Instant.now(),
 				valueOrDefault(request.finalFen(), STARTING_FEN),
 				moves,
-				request.pgn());
-
-		games.put(id, detail);
-		return detail;
+				valueOrDefault(request.pgn(), "")));
 	}
 
 	public List<GameSummary> listGames() {
-		return games.values().stream()
-				.sorted(Comparator.comparing(GameDetail::createdAt).reversed())
+		return store.listGames().stream()
 				.map(GameDetail::toSummary)
 				.toList();
 	}
 
 	public GameDetail getGame(String gameId) {
-		GameDetail game = games.get(gameId);
-		if (game == null) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found");
-		}
-		return game;
+		return store.findGame(gameId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
 	}
 
 	public AnalysisJob startAnalysis(String gameId) {
 		GameDetail game = getGame(gameId);
-		AnalysisJob job = new AnalysisJob(Long.toString(jobSequence.getAndIncrement()), gameId, AnalysisStatus.RUNNING);
-		jobsByGameId.put(gameId, job);
-		reportsByGameId.put(gameId,
-				new AnalysisReport(gameId, job.id(), AnalysisStatus.RUNNING, RUNNING_MESSAGE, List.of()));
+		AnalysisJob job = store.createJob(gameId, AnalysisStatus.RUNNING);
+		store.saveReport(new AnalysisReport(gameId, job.id(), AnalysisStatus.RUNNING, RUNNING_MESSAGE, List.of()));
 		try {
 			dispatcher.dispatch(new AnalysisRequest(game.id(), job.id(), depth, maxPlies, game.moves()));
 		} catch (Exception error) {
 			job = new AnalysisJob(job.id(), gameId, AnalysisStatus.FAILED);
-			jobsByGameId.put(gameId, job);
-			reportsByGameId.put(gameId, new AnalysisReport(
+			store.updateJobStatus(job.id(), AnalysisStatus.FAILED);
+			store.saveReport(new AnalysisReport(
 					gameId,
 					job.id(),
 					AnalysisStatus.FAILED,
@@ -105,23 +95,22 @@ public class GameService {
 
 	public AnalysisReport getReport(String gameId) {
 		getGame(gameId);
-		AnalysisReport report = reportsByGameId.get(gameId);
-		if (report == null) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Analysis has not been started for this game");
-		}
-		return report;
+		return store.findReport(gameId)
+				.orElseThrow(() -> new ResponseStatusException(
+						HttpStatus.NOT_FOUND,
+						"Analysis has not been started for this game"));
 	}
 
 	public void completeAnalysis(AnalysisReport report) {
 		if (report == null) {
 			return;
 		}
-		AnalysisJob currentJob = jobsByGameId.get(report.gameId());
+		AnalysisJob currentJob = store.findCurrentJob(report.gameId()).orElse(null);
 		if (currentJob == null || !currentJob.id().equals(report.jobId())) {
 			return;
 		}
-		jobsByGameId.put(report.gameId(), new AnalysisJob(report.jobId(), report.gameId(), report.status()));
-		reportsByGameId.put(report.gameId(), report);
+		store.updateJobStatus(report.jobId(), report.status());
+		store.saveReport(report);
 	}
 
 	private static List<MoveRecord> sanitizeMoves(List<MoveRecord> moves) {

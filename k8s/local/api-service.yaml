@@ -23,6 +23,26 @@ spec:
                 configMapKeyRef:
                   name: chess-lab-config
                   key: SPRING_RABBITMQ_HOST
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: chess-lab-config
+                  key: DATABASE_URL
+            - name: DATABASE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: chess-lab-config
+                  key: DATABASE_USERNAME
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: chess-lab-db
+                  key: DATABASE_PASSWORD
+            - name: HIBERNATE_DDL_AUTO
+              valueFrom:
+                configMapKeyRef:
+                  name: chess-lab-config
+                  key: HIBERNATE_DDL_AUTO
             - name: STOCKFISH_DEPTH
               valueFrom:
                 configMapKeyRef:

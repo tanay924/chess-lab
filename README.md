@@ -10,6 +10,7 @@ Chess Lab imports chess games, keeps a local study library, and runs Stockfish a
 - API: Spring Boot 4.1, Java 21, RabbitMQ producer/result consumer
 - Worker: Spring Boot 4.1, Java 21, RabbitMQ consumer, Stockfish runner
 - Queue: RabbitMQ
+- Persistence: Spring Data JPA with Postgres in Compose/k8s and H2 fallback for standalone local runs
 - Optional local runtime: Docker Compose
 - Optional local orchestration: Kubernetes with Docker Desktop or kind
 
@@ -20,6 +21,7 @@ frontend/          Vue client
 api-service/       Spring Boot REST API
 analysis-worker/   Spring Boot Stockfish worker
 docs/              architecture and runbooks
+k8s/local/         local Kubernetes manifests
 ```
 
 ## Local Prerequisites
@@ -70,6 +72,8 @@ $env:ANALYSIS_MAX_PLIES='80'
 
 Analysis jobs are queued through RabbitMQ. The API creates jobs and serves reports; the worker consumes jobs, runs Stockfish, and publishes completed reports back to the API.
 
+When the API is run directly without database environment variables, it stores games and reports in `api-service/data/chesslab.mv.db`. Compose and local Kubernetes use Postgres instead.
+
 Docker Compose, once Docker is installed:
 
 ```powershell
@@ -80,6 +84,7 @@ Compose exposes:
 
 - Frontend: `http://127.0.0.1:5175`
 - API: `http://127.0.0.1:8080`
+- Postgres: `127.0.0.1:5433` (`chesslab` / `chesslab`)
 - RabbitMQ management: `http://127.0.0.1:15673` (`guest` / `guest`)
 
 Local Kubernetes:
@@ -100,7 +105,7 @@ The frontend defaults to `http://127.0.0.1:8080` for API calls. Set `VITE_API_BA
 ## Current Slice
 
 - PGN import and manual starting-position entry are parsed client-side with `chess.js`, including legal final FEN and move table extraction.
-- The API stores imported games in memory and exposes list/detail/analysis endpoints.
+- The API persists imported games, analysis jobs, and reports through JPA, and exposes list/detail/analysis endpoints.
 - Analysis jobs run asynchronously through RabbitMQ; the worker calls local Stockfish for each ply.
 - The frontend polls analysis reports and renders the engine's best move plus a first-pass classification.
 - The worker contains deterministic move classification rules and a UCI Stockfish process client; it does not fabricate engine analysis.
@@ -108,6 +113,5 @@ The frontend defaults to `http://127.0.0.1:8080` for API calls. Set `VITE_API_BA
 ## Next Engineering Steps
 
 1. Replace the first-pass best-move-only classification with centipawn-loss based grading.
-2. Persist games, jobs, and reports so imported games survive API restarts.
-3. Add mistake replay drills from completed engine reports.
-4. Add optional observability dashboards around API latency, queue depth, and worker analysis time.
+2. Add mistake replay drills from completed engine reports.
+3. Add optional observability dashboards around API latency, queue depth, and worker analysis time.

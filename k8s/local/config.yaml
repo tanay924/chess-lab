@@ -5,6 +5,9 @@ metadata:
   namespace: chess-lab
 data:
   SPRING_RABBITMQ_HOST: rabbitmq
+  DATABASE_URL: jdbc:postgresql://postgres:5432/chesslab
+  DATABASE_USERNAME: chesslab
+  HIBERNATE_DDL_AUTO: update
   STOCKFISH_DEPTH: "8"
   ANALYSIS_MAX_PLIES: "80"
   STOCKFISH_PATH: stockfish
