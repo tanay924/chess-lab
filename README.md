@@ -100,7 +100,7 @@ kubectl -n chess-lab get pods
 
 See `k8s/local/README.md` for port-forwarding, kind image loading, logs, and cleanup.
 
-The frontend defaults to `http://127.0.0.1:8080` for API calls. Set `VITE_API_BASE_URL` before building if you run the API elsewhere.
+The frontend maps standard local ports automatically: Compose `5175 -> 8080`, local Kubernetes `15175 -> 18080`. Set `VITE_API_BASE_URL` before building if you run the API elsewhere.
 
 ## Current Slice
 

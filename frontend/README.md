@@ -9,4 +9,4 @@ npm run test
 npm run build
 ```
 
-Set `VITE_API_BASE_URL` if the API is not running at `http://127.0.0.1:8080`.
+Set `VITE_API_BASE_URL` if the API is not running on one of the standard local ports. The built app maps local Kubernetes `15175` to API `18080`, and Vite dev ports `5173`-`5175` to API `8080`.

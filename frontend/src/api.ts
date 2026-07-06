@@ -1,6 +1,24 @@
 import type { AnalysisJob, AnalysisReport, GameDetail, GameImportPayload, GameSummary } from "./types";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8080";
+const API_BASE = resolveApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
+
+export function resolveApiBaseUrl(explicitUrl?: string, pageHref?: string): string {
+  if (explicitUrl?.trim()) {
+    return explicitUrl;
+  }
+
+  const href = pageHref ?? (typeof window === "undefined" ? "http://127.0.0.1:5173/" : window.location.href);
+  const pageUrl = new URL(href);
+  const apiPortByFrontendPort: Record<string, string> = {
+    "5173": "8080",
+    "5174": "8080",
+    "5175": "8080",
+    "15175": "18080"
+  };
+  const apiPort = apiPortByFrontendPort[pageUrl.port] ?? "8080";
+
+  return `${pageUrl.protocol}//${pageUrl.hostname}:${apiPort}`;
+}
 
 export async function createGame(payload: GameImportPayload): Promise<GameDetail> {
   const response = await fetch(`${API_BASE}/api/games`, {

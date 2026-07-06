@@ -49,26 +49,24 @@ Postgres should also be ready; it stores imported games, analysis jobs, and repo
 Run these in separate terminals:
 
 ```powershell
-kubectl -n chess-lab port-forward svc/api-service 8080:8080
-kubectl -n chess-lab port-forward svc/frontend 5175:80
+kubectl -n chess-lab port-forward svc/api-service 18080:8080
+kubectl -n chess-lab port-forward svc/frontend 15175:80
 ```
 
 Then open:
 
 ```text
-http://127.0.0.1:5175
+http://127.0.0.1:15175
 ```
 
-The frontend build calls the API at `http://127.0.0.1:8080`, so keep the API port-forward running.
+The frontend maps local Kubernetes port `15175` to API port `18080` automatically, so keep both port-forwards running.
 
-If port `8080` is already in use, choose another local API port and rebuild the frontend with that API URL:
+If you choose custom ports, rebuild the frontend with the API URL:
 
 ```powershell
 docker build --build-arg VITE_API_BASE_URL=http://127.0.0.1:18080 -t chess-lab-frontend:local .\frontend
 kind load docker-image chess-lab-frontend:local --name chess-lab
 kubectl -n chess-lab rollout restart deployment/frontend
-kubectl -n chess-lab port-forward svc/api-service 18080:8080
-kubectl -n chess-lab port-forward svc/frontend 15175:80
 ```
 
 Optional RabbitMQ management UI:
