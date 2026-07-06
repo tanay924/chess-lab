@@ -10,11 +10,11 @@ import com.tanay.chesslab.api.domain.GameDetail;
 
 public interface GameStore {
 
-	GameDetail createGame(NewGame game);
+	GameDetail createGame(String ownerUsername, NewGame game);
 
-	List<GameDetail> listGames();
+	List<GameDetail> listGames(String ownerUsername);
 
-	Optional<GameDetail> findGame(String gameId);
+	Optional<GameDetail> findGame(String ownerUsername, String gameId);
 
 	AnalysisJob createJob(String gameId, AnalysisStatus status);
 

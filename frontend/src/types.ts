@@ -1,5 +1,20 @@
 export type AnalysisStatus = "queued" | "running" | "ready" | "failed";
 
+export interface AuthSession {
+  authenticated: boolean;
+  username: string | null;
+}
+
+export interface AuthCredentials {
+  password: string;
+  username: string;
+}
+
+export interface CsrfToken {
+  headerName: string;
+  token: string;
+}
+
 export interface GameSummary {
   black: string;
   createdAt: string;

@@ -21,6 +21,7 @@ class CorsConfigTest {
 		assertThat(configuration.checkOrigin("http://127.0.0.1:15175"))
 				.isEqualTo("http://127.0.0.1:15175");
 		assertThat(configuration.checkHttpMethod(org.springframework.http.HttpMethod.POST)).isNotNull();
+		assertThat(configuration.getAllowCredentials()).isTrue();
 	}
 
 	private static final class InspectableCorsRegistry extends CorsRegistry {

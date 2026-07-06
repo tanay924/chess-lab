@@ -24,6 +24,8 @@ class JpaGameEntity {
 	@Column(nullable = false)
 	private String blackName;
 
+	private String ownerUsername;
+
 	@Column(nullable = false)
 	private String result;
 
@@ -48,7 +50,8 @@ class JpaGameEntity {
 	protected JpaGameEntity() {
 	}
 
-	JpaGameEntity(NewGame game, String movesJson) {
+	JpaGameEntity(String ownerUsername, NewGame game, String movesJson) {
+		this.ownerUsername = ownerUsername;
 		this.whiteName = game.white();
 		this.blackName = game.black();
 		this.result = game.result();
@@ -69,6 +72,10 @@ class JpaGameEntity {
 
 	String blackName() {
 		return blackName;
+	}
+
+	String ownerUsername() {
+		return ownerUsername;
 	}
 
 	String result() {

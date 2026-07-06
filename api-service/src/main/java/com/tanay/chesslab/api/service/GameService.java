@@ -26,6 +26,7 @@ import com.tanay.chesslab.api.persistence.NewGame;
 @Service
 public class GameService {
 
+	private static final String DEFAULT_TEST_OWNER = "local";
 	private static final String STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	private static final String RUNNING_MESSAGE = "Stockfish analysis has been queued for the worker.";
 
@@ -51,8 +52,12 @@ public class GameService {
 	}
 
 	public GameDetail createGame(CreateGameRequest request) {
+		return createGame(DEFAULT_TEST_OWNER, request);
+	}
+
+	public GameDetail createGame(String ownerUsername, CreateGameRequest request) {
 		List<MoveRecord> moves = sanitizeMoves(request.moves());
-		return store.createGame(new NewGame(
+		return store.createGame(ownerUsername, new NewGame(
 				valueOrDefault(request.white(), "White"),
 				valueOrDefault(request.black(), "Black"),
 				valueOrDefault(request.result(), "*"),
@@ -64,20 +69,32 @@ public class GameService {
 	}
 
 	public List<GameSummary> listGames() {
-		return store.listGames().stream()
+		return listGames(DEFAULT_TEST_OWNER);
+	}
+
+	public List<GameSummary> listGames(String ownerUsername) {
+		return store.listGames(ownerUsername).stream()
 				.map(GameDetail::toSummary)
 				.toList();
 	}
 
 	public GameDetail getGame(String gameId) {
-		return store.findGame(gameId)
+		return getGame(DEFAULT_TEST_OWNER, gameId);
+	}
+
+	public GameDetail getGame(String ownerUsername, String gameId) {
+		return store.findGame(ownerUsername, gameId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
 	}
 
 	public AnalysisJob startAnalysis(String gameId) {
-		GameDetail game = getGame(gameId);
-		AnalysisJob job = store.createJob(gameId, AnalysisStatus.RUNNING);
-		store.saveReport(new AnalysisReport(gameId, job.id(), AnalysisStatus.RUNNING, RUNNING_MESSAGE, List.of()));
+		return startAnalysis(DEFAULT_TEST_OWNER, gameId);
+	}
+
+	public AnalysisJob startAnalysis(String ownerUsername, String gameId) {
+		GameDetail game = getGame(ownerUsername, gameId);
+		AnalysisJob job = store.createJob(gameId, AnalysisStatus.QUEUED);
+		store.saveReport(new AnalysisReport(gameId, job.id(), AnalysisStatus.QUEUED, RUNNING_MESSAGE, List.of()));
 		try {
 			dispatcher.dispatch(new AnalysisRequest(game.id(), job.id(), depth, maxPlies, game.moves()));
 		} catch (Exception error) {
@@ -94,7 +111,11 @@ public class GameService {
 	}
 
 	public AnalysisReport getReport(String gameId) {
-		getGame(gameId);
+		return getReport(DEFAULT_TEST_OWNER, gameId);
+	}
+
+	public AnalysisReport getReport(String ownerUsername, String gameId) {
+		getGame(ownerUsername, gameId);
 		return store.findReport(gameId)
 				.orElseThrow(() -> new ResponseStatusException(
 						HttpStatus.NOT_FOUND,

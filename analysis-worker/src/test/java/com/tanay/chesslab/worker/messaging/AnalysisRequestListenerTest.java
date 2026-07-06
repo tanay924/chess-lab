@@ -22,8 +22,9 @@ class AnalysisRequestListenerTest {
 
 		listener.handle(new AnalysisRequest("game-1", "job-1", 6, 40, List.of()));
 
-		assertThat(publisher.results).hasSize(1);
-		AnalysisResult result = publisher.results.getFirst();
+		assertThat(publisher.results).hasSize(2);
+		assertThat(publisher.results.getFirst().status()).isEqualTo(AnalysisStatus.RUNNING);
+		AnalysisResult result = publisher.results.get(1);
 		assertThat(result.gameId()).isEqualTo("game-1");
 		assertThat(result.jobId()).isEqualTo("job-1");
 		assertThat(result.status()).isEqualTo(AnalysisStatus.READY);
@@ -40,8 +41,9 @@ class AnalysisRequestListenerTest {
 
 		listener.handle(new AnalysisRequest("game-1", "job-1", 6, 40, List.of()));
 
-		assertThat(publisher.results).hasSize(1);
-		AnalysisResult result = publisher.results.getFirst();
+		assertThat(publisher.results).hasSize(2);
+		assertThat(publisher.results.getFirst().status()).isEqualTo(AnalysisStatus.RUNNING);
+		AnalysisResult result = publisher.results.get(1);
 		assertThat(result.status()).isEqualTo(AnalysisStatus.FAILED);
 		assertThat(result.message()).contains("Stockfish is missing");
 		assertThat(result.evaluations()).isEmpty();
@@ -80,8 +82,9 @@ class AnalysisRequestListenerTest {
 				}
 				""");
 
-		assertThat(publisher.results).hasSize(1);
-		assertThat(publisher.results.getFirst().status()).isEqualTo(AnalysisStatus.READY);
+		assertThat(publisher.results).hasSize(2);
+		assertThat(publisher.results.getFirst().status()).isEqualTo(AnalysisStatus.RUNNING);
+		assertThat(publisher.results.get(1).status()).isEqualTo(AnalysisStatus.READY);
 	}
 
 	private static final class RecordingPublisher implements AnalysisResultPublisher {
