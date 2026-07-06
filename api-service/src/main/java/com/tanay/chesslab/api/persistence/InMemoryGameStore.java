@@ -17,11 +17,12 @@ public class InMemoryGameStore implements GameStore {
 	private final AtomicLong gameSequence = new AtomicLong(1);
 	private final AtomicLong jobSequence = new AtomicLong(1);
 	private final Map<String, GameDetail> games = new ConcurrentHashMap<>();
+	private final Map<String, String> gameOwners = new ConcurrentHashMap<>();
 	private final Map<String, AnalysisJob> jobsByGameId = new ConcurrentHashMap<>();
 	private final Map<String, AnalysisReport> reportsByGameId = new ConcurrentHashMap<>();
 
 	@Override
-	public GameDetail createGame(NewGame game) {
+	public GameDetail createGame(String ownerUsername, NewGame game) {
 		String id = Long.toString(gameSequence.getAndIncrement());
 		GameDetail detail = new GameDetail(
 				id,
@@ -34,18 +35,23 @@ public class InMemoryGameStore implements GameStore {
 				game.moves(),
 				game.pgn());
 		games.put(id, detail);
+		gameOwners.put(id, ownerUsername);
 		return detail;
 	}
 
 	@Override
-	public List<GameDetail> listGames() {
+	public List<GameDetail> listGames(String ownerUsername) {
 		return games.values().stream()
+				.filter(game -> ownerUsername.equals(gameOwners.get(game.id())))
 				.sorted(Comparator.comparing(GameDetail::createdAt).reversed())
 				.toList();
 	}
 
 	@Override
-	public Optional<GameDetail> findGame(String gameId) {
+	public Optional<GameDetail> findGame(String ownerUsername, String gameId) {
+		if (!ownerUsername.equals(gameOwners.get(gameId))) {
+			return Optional.empty();
+		}
 		return Optional.ofNullable(games.get(gameId));
 	}
 

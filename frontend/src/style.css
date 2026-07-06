@@ -29,6 +29,7 @@ body {
 }
 
 button,
+input,
 textarea {
   font: inherit;
 }
@@ -125,6 +126,31 @@ button:disabled {
 nav {
   display: flex;
   gap: 22px;
+}
+
+.topbar-right {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+}
+
+.user-menu {
+  align-items: center;
+  border-left: 1px solid var(--line);
+  display: flex;
+  gap: 10px;
+  padding-left: 16px;
+}
+
+.user-menu span {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.compact-button {
+  min-height: 34px;
+  padding: 6px 10px;
 }
 
 nav a {
@@ -256,6 +282,16 @@ textarea {
   resize: vertical;
 }
 
+input {
+  background: #ffffff;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--ink);
+  min-height: 42px;
+  padding: 9px 12px;
+}
+
+input:focus,
 textarea:focus {
   border-color: var(--green);
   outline: 2px solid rgba(47, 93, 80, 0.14);
@@ -276,6 +312,41 @@ textarea:focus {
 .error-text {
   color: var(--red);
   font-weight: 700;
+}
+
+.auth-layout {
+  display: grid;
+  justify-items: center;
+}
+
+.auth-panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  box-shadow: 0 10px 28px rgba(36, 40, 35, 0.08);
+  display: grid;
+  gap: 12px;
+  max-width: 420px;
+  padding: 22px;
+  width: min(100%, 420px);
+}
+
+.auth-panel h1 {
+  color: #1c211d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2rem;
+  line-height: 1.1;
+  margin: 0 0 8px;
+}
+
+.auth-panel label {
+  font-weight: 800;
+}
+
+.inline-link {
+  color: var(--green-dark);
+  font-weight: 800;
+  text-decoration: underline;
 }
 
 .stack {
@@ -482,5 +553,16 @@ button.board-square.dark:hover {
     align-items: flex-start;
     gap: 12px;
     flex-direction: column;
+  }
+
+  .topbar-right,
+  .user-menu {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .user-menu {
+    border-left: 0;
+    padding-left: 0;
   }
 }

@@ -60,6 +60,7 @@ http://127.0.0.1:15175
 ```
 
 The frontend maps local Kubernetes port `15175` to API port `18080` automatically, so keep both port-forwards running.
+Register a local username/password before importing games. Registration logs you in immediately, and each user's library is private to that account.
 
 If you choose custom ports, rebuild the frontend with the API URL:
 

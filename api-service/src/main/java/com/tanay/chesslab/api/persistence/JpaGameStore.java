@@ -44,23 +44,25 @@ class JpaGameStore implements GameStore {
 
 	@Override
 	@Transactional
-	public GameDetail createGame(NewGame game) {
-		JpaGameEntity entity = games.save(new JpaGameEntity(game, write(game.moves())));
+	public GameDetail createGame(String ownerUsername, NewGame game) {
+		JpaGameEntity entity = games.save(new JpaGameEntity(ownerUsername, game, write(game.moves())));
 		return toDetail(entity);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<GameDetail> listGames() {
-		return games.findAllByOrderByCreatedAtDesc().stream()
+	public List<GameDetail> listGames(String ownerUsername) {
+		return games.findAllByOwnerUsernameOrderByCreatedAtDesc(ownerUsername).stream()
 				.map(this::toDetail)
 				.toList();
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public Optional<GameDetail> findGame(String gameId) {
-		return parseId(gameId).flatMap(games::findById).map(this::toDetail);
+	public Optional<GameDetail> findGame(String ownerUsername, String gameId) {
+		return parseId(gameId)
+				.flatMap(id -> games.findByIdAndOwnerUsername(id, ownerUsername))
+				.map(this::toDetail);
 	}
 
 	@Override

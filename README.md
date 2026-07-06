@@ -2,7 +2,7 @@
 
 Local-first chess training app built with Vue, Spring Boot, and Stockfish.
 
-Chess Lab imports chess games, keeps a local study library, and runs Stockfish analysis on your machine. The product direction is deliberately focused: no AI summaries, no accounts, no cloud sync, and no scraping from chess sites.
+Chess Lab imports chess games, keeps local per-user study libraries, and runs Stockfish analysis on your machine. The product direction is deliberately focused: no AI summaries, no cloud sync, and no scraping from chess sites.
 
 ## Stack
 
@@ -70,9 +70,11 @@ $env:STOCKFISH_DEPTH='8'
 $env:ANALYSIS_MAX_PLIES='80'
 ```
 
-Analysis jobs are queued through RabbitMQ. The API creates jobs and serves reports; the worker consumes jobs, runs Stockfish, and publishes completed reports back to the API.
+Analysis jobs are queued through RabbitMQ. The API creates jobs and serves reports; the worker consumes jobs FIFO, runs Stockfish, and publishes running/completed reports back to the API.
 
 When the API is run directly without database environment variables, it stores games and reports in `api-service/data/chesslab.mv.db`. Compose and local Kubernetes use Postgres instead.
+
+The app requires a local account before importing or reviewing games. Anyone can register with a username and password; there is no email verification. Usernames are case-insensitive unique, passwords are stored with BCrypt, and each user's library only shows their own games.
 
 Docker Compose, once Docker is installed:
 
@@ -105,8 +107,8 @@ The frontend maps standard local ports automatically: Compose `5175 -> 8080`, lo
 ## Current Slice
 
 - PGN import and manual starting-position entry are parsed client-side with `chess.js`, including legal final FEN and move table extraction.
-- The API persists imported games, analysis jobs, and reports through JPA, and exposes list/detail/analysis endpoints.
-- Analysis jobs run asynchronously through RabbitMQ; the worker calls local Stockfish for each ply.
+- The API uses Spring Security session auth, persists imported games, analysis jobs, and reports through JPA, and exposes owner-scoped list/detail/analysis endpoints.
+- Analysis jobs run asynchronously through RabbitMQ with simple queued/running/ready/failed status; the worker calls local Stockfish for each ply.
 - The frontend polls analysis reports and renders the engine's best move plus a first-pass classification.
 - The worker contains deterministic move classification rules and a UCI Stockfish process client; it does not fabricate engine analysis.
 

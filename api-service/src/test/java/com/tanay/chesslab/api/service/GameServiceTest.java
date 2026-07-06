@@ -1,6 +1,7 @@
 package com.tanay.chesslab.api.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,13 +36,25 @@ class GameServiceTest {
 						"e2e4",
 						"e7e5")));
 
-		var created = games.createGame(request);
+		var created = games.createGame("ada", request);
 
 		assertThat(created.id()).isEqualTo("1");
 		assertThat(created.white()).isEqualTo("Ada");
 		assertThat(created.black()).isEqualTo("Grace");
 		assertThat(created.moves()).hasSize(1);
-		assertThat(games.listGames()).extracting("id").containsExactly("1");
+		assertThat(games.listGames("ada")).extracting("id").containsExactly("1");
+	}
+
+	@Test
+	void scopesGamesByOwner() {
+		var adaGame = games.createGame("ada", sampleGameRequest());
+		var graceGame = games.createGame("grace", sampleGameRequest());
+
+		assertThat(games.listGames("ada")).extracting("id").containsExactly(adaGame.id());
+		assertThat(games.listGames("grace")).extracting("id").containsExactly(graceGame.id());
+		assertThat(games.getGame("ada", adaGame.id()).id()).isEqualTo(adaGame.id());
+		assertThatThrownBy(() -> games.getGame("grace", adaGame.id()))
+				.hasMessageContaining("404 NOT_FOUND");
 	}
 
 	@Test
@@ -51,8 +64,8 @@ class GameServiceTest {
 		var job = games.startAnalysis(created.id());
 		var report = games.getReport(created.id());
 
-		assertThat(job.status()).isEqualTo(AnalysisStatus.RUNNING);
-		assertThat(report.status()).isEqualTo(AnalysisStatus.RUNNING);
+		assertThat(job.status()).isEqualTo(AnalysisStatus.QUEUED);
+		assertThat(report.status()).isEqualTo(AnalysisStatus.QUEUED);
 		assertThat(report.message()).contains("queued");
 		assertThat(dispatcher.requests).hasSize(1);
 		AnalysisRequest request = dispatcher.requests.getFirst();
@@ -122,8 +135,8 @@ class GameServiceTest {
 
 		var report = games.getReport(created.id());
 
-		assertThat(secondJob.status()).isEqualTo(AnalysisStatus.RUNNING);
-		assertThat(report.status()).isEqualTo(AnalysisStatus.RUNNING);
+		assertThat(secondJob.status()).isEqualTo(AnalysisStatus.QUEUED);
+		assertThat(report.status()).isEqualTo(AnalysisStatus.QUEUED);
 		assertThat(report.message()).doesNotContain("Old result");
 	}
 

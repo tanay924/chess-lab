@@ -34,6 +34,12 @@ public class WorkerAnalysisListener {
 
 	public void handle(AnalysisRequest request) {
 		try {
+			publisher.publish(new AnalysisResult(
+					request.gameId(),
+					request.jobId(),
+					AnalysisStatus.RUNNING,
+					"Stockfish analysis is running locally.",
+					List.of()));
 			List<MoveEvaluation> evaluations = analyzer.analyze(request);
 			publisher.publish(new AnalysisResult(
 					request.gameId(),
